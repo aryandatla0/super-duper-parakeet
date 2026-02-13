@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Valentine for You</title>
+    <style>
+        :root {
+            --bg-color-1: #fdf6f6;
+            --bg-color-2: #fff0f3;
+            --bg-color-3: #f0f7ff;
+            --card-front: #fff5f8;
+            --card-inside: #ffffff;
+            --accent-pink: #f4abb4;
+            --text-color: #7a5c5c;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, var(--bg-color-2) 0%, var(--bg-color-3) 50%, var(--bg-color-1) 100%);
+            background-size: 200% 200%;
+            transition: background 2.5s ease-in-out;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        body.opened {
+            background: radial-gradient(circle at center, #fff0f3 0%, #ffeef2 30%, #f4f9ff 70%, #fdf6f6 100%);
+        }
+
+        .valentine-card {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            perspective: 1500px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transform-style: preserve-3d;
+            transform-origin: left;
+            box-shadow: 10px 0 20px var(--shadow);
+        }
+
+        .valentine-card.flipped .card-inner {
+            transform: rotateY(-165deg);
+        }
+
+        .card-front, .card-inside-left {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 5px 15px 15px 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card-front {
+            background: var(--card-front);
+            z-index: 2;
+        }
+
+        /* Inside Left - The Flower Garden */
+        .card-inside-left {
+            background: #fafafa;
+            transform: rotateY(180deg);
+            overflow: hidden;
+            display: block; /* Change from flex to allow absolute positioning of flowers */
+        }
+
+        .flower {
+            position: absolute;
+            bottom: -20px;
+            transform: scale(0);
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        }
+
+        .valentine-card.flipped .flower {
+            transform: scale(1);
+        }
+
+        .card-base {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--card-inside);
+            border-radius: 5px 15px 15px 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            z-index: -1;
+            box-shadow: inset 5px 0 15px var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Rolling Message Styles */
+        .message-container {
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #rolling-text {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .heart-particle {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            animation: fallAnimation linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes fallAnimation {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        h2 { font-weight: normal; color: #a67c7c; margin: 0; text-align: center;}
+    </style>
+</head>
+<body>
+
+    <div class="valentine-card" id="card">
+        <div class="card-base">
+            <div class="message">
+                Happy Valentine's Day!<br><br>
+                <div class="message-container">
+                    <span id="rolling-text">You make every day feel like a beautiful dream.</span>
+                </div>
+                <br>
+                <span style="font-size: 0.8rem; letter-spacing: 2px;">FOREVER & ALWAYS</span>
+            </div>
+        </div>
+
+        <div class="card-inner">
+            <div class="card-front">
+                <div class="heart-icon">❤️</div>
+                <h2>To My Favorite Person</h2>
+                <p style="font-size: 0.8rem; color: #bca0a0; margin-top: 20px;">(Click to open)</p>
+            </div>
+            <div class="card-inside-left" id="flower-bed">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('card');
+        const rollingText = document.getElementById('rolling-text');
+        const flowerBed = document.getElementById('flower-bed');
+
+        // EDIT THESE MESSAGES HERE
+        const messages = [
+            "You make every day feel like a beautiful dream.",
+            "My favorite place in the world is next to you.",
+            "You are the best thing that ever happened to me.",
+            "I love you more than words can express.",
+            "Thank you for being my Valentine."
+        ];
+
+        let msgIndex = 0;
+
+        // Message Rotation Logic
+        function rotateMessage() {
+            rollingText.style.opacity = 0;
+            rollingText.style.transform = "translateY(10px)";
+            
+            setTimeout(() => {
+                msgIndex = (msgIndex + 1) % messages.length;
+                rollingText.textContent = messages[msgIndex];
+                rollingText.style.opacity = 1;
+                rollingText.style.transform = "translateY(0)";
+            }, 500);
+        }
+
+        setInterval(rotateMessage, 3500);
+
+        // Flower Generation
+        const flowerIcons = ['🌸', '🌷', '🌹', '🌻', '🌼', '🌺'];
+        for (let i = 0; i < 15; i++) {
+            const f = document.createElement('div');
+            f.className = 'flower';
+            f.innerHTML = flowerIcons[Math.floor(Math.random() * flowerIcons.length)];
+            f.style.left = Math.random() * 80 + 10 + '%';
+            f.style.bottom = Math.random() * 80 + 10 + '%';
+            f.style.fontSize = Math.random() * 20 + 20 + 'px';
+            // Staggered grow effect
+            f.style.transitionDelay = (Math.random() * 0.8 + 0.5) + 's';
+            flowerBed.appendChild(f);
+        }
+
+        // Heart Rain
+        const heartIcons = ['❤️', '🧡', '💛', '💚', '💙', '💜', '💖', '💕'];
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart-particle';
+            heart.innerHTML = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            const duration = Math.random() * 3 + 4;
+            heart.style.animationDuration = duration + 's';
+            heart.style.fontSize = Math.random() * 12 + 18 + 'px';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), duration * 1000);
+        }
+
+        setInterval(createHeart, 200);
+
+        card.addEventListener('click', () => {
+            card.classList.toggle('flipped');
+            document.body.classList.toggle('opened');
+        });
+    </script>
+</body>
+</html>
